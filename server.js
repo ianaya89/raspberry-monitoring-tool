@@ -1,8 +1,5 @@
-/**
- * Autor: Mario Pérez Esteso <mario@geekytheory.com>
- * Web: geekytheory.com
- */
-var port = 8000;
+const port = process.env.PORT || 3000;
+
 var app = require('http').createServer(handler).listen(port, "0.0.0.0"),
   io = require('socket.io').listen(app),
   fs = require('fs'),
