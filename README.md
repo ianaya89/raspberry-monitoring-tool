@@ -7,6 +7,7 @@
   3. git
 
   *Open a terminal and run these commands to install the tools:*
+
     1.`$ sudo apt-get install nodejs npm git`
     2.`$ sudo apt-get update && sudo apt-get upgrade`
 
@@ -16,4 +17,4 @@
   3. Run: `$ npm i`
   4. Run: `npm start`
   
-  *Now open a browser with your Raspberry Pi's IP and start to listen the port 3000.*
+  *Now open a browser with your Raspberry Pi's IP and start to listen on port 3000.*
