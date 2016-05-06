@@ -1,6 +1,5 @@
 'use-strict';
 
-const io = require('socket.io').listen(app);
 const fs = require('fs');
 const sys = require('util');
 const exec = require('child_process').exec;
@@ -12,13 +11,18 @@ let connectCounter = 0;
 const INTERVAL = process.env.INTERVAL = 500;
 const PORT = process.env.PORT || 3000;
 
-const app = require('http').createServer(handler).listen(PORT, '0.0.0.0');
+const app = require('http')
+  .createServer(serverHandler)
+  .listen(PORT, '0.0.0.0');
+
+const io = require('socket.io')
+  .listen(app);
 
 app.listen(PORT, function() {
   console.log(`Monitoring running on port: ${PORT}`)
 });
 
-function handler(req, res) {
+function serverHandler(req, res) {
 	fs.readFile(__dirname+'/index.html', function(err, data) {
 		if (err) {
 			console.log(err);
