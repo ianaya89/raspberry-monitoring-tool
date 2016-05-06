@@ -27,7 +27,7 @@ function serverHandler(req, res) {
   var filePath = '.' + req.url;
   filePath = filePath === './' ? './index.html' : filePath;
 
-  var contentType = getContenType(filePath);
+  var contentType = getContentType(filePath);
   
 	fs.readFile(__dirname + '/public/' + filePath, function(err, data) {
 		if (err) {
