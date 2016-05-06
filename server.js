@@ -5,8 +5,8 @@ const path = require('path');
 const sys = require('util');
 const exec = require('child_process').exec;
 
-let child;
-let child1;
+let firstChild;
+let secondChild;
 let connectCounter = 0;
 
 const INTERVAL = process.env.INTERVAL = 500;
@@ -88,7 +88,7 @@ io.sockets.on('connection', (socket) => {
 
   socket.on('disconnect', () => console.log(`--- Connection numbers: ${connectCounter--}`));
 
-  child = exec(`egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+  firstChild = exec(`egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
     if (error !== null) {
       console.log(`[ERROR]: ${error}`);
     } 
@@ -98,7 +98,7 @@ io.sockets.on('connection', (socket) => {
     }
   });
 
-  child = exec('hostname', (error, stdout, stderr) => {
+  firstChild = exec('hostname', (error, stdout, stderr) => {
     if (error !== null) {
       console.log(`[ERROR]: ${error}`);
     } 
@@ -107,7 +107,7 @@ io.sockets.on('connection', (socket) => {
     }
   });
 
-  child = exec(`uptime | tail -n 1 | awk '{print $1}'`, (error, stdout, stderr) => {
+  firstChild = exec(`uptime | tail -n 1 | awk '{print $1}'`, (error, stdout, stderr) => {
     if (error !== null) {
       console.log(`[ERROR]: ${error}`);
     } 
@@ -116,7 +116,7 @@ io.sockets.on('connection', (socket) => {
     }
   });
 
-  child = exec(`uname -r`, (error, stdout, stderr) => {
+  firstChild = exec(`uname -r`, (error, stdout, stderr) => {
     if (error !== null) {
       console.log(`[ERROR]: ${error}`);
     } 
@@ -125,7 +125,7 @@ io.sockets.on('connection', (socket) => {
     }
   });
 
-  child = exec(`top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'`, (error, stdout, stderr) => {
+  firstChild = exec(`top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'`, (error, stdout, stderr) => {
     if (error !== null) {
       console.log(`[ERROR]: ${error}`);
     } 
@@ -135,7 +135,7 @@ io.sockets.on('connection', (socket) => {
   });
 
   setInterval(() => {
-    child1 = exec(`egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+    secondChild = exec(`egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
       if (error !== null) {
         sendData = 0;
         console.log(`[ERROR]: ${error}`);
@@ -148,7 +148,7 @@ io.sockets.on('connection', (socket) => {
       }
     });
 
-    child1 = exec(`egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+    secondChild = exec(`egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
       if (error !== null) {
 
       } 
@@ -158,7 +158,7 @@ io.sockets.on('connection', (socket) => {
       }
     });
 
-    child1 = exec(`egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+    secondChild = exec(`egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
       if (error !== null) {
         sendData = 0;
         console.log(`[ERROR]: ${error}`);
@@ -178,7 +178,7 @@ io.sockets.on('connection', (socket) => {
   }, INTERVAL);
 
   setInterval(() => {
-    child = exec(`cat /sys/class/thermal/thermal_zone0/temp`, (error, stdout, stderr) => {
+    firstChild = exec(`cat /sys/class/thermal/thermal_zone0/temp`, (error, stdout, stderr) => {
       if (error !== null) {
         console.log(`[ERROR]: ${error}`);
       } 
@@ -192,7 +192,7 @@ io.sockets.on('connection', (socket) => {
   }, INTERVAL);
 
   setInterval(() => {
-    child = exec(`top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`, (error, stdout, stderr) => {
+    firstChild = exec(`top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`, (error, stdout, stderr) => {
       if (error !== null) {
         console.log(`[ERROR]: ${error}`);
       } 
@@ -204,7 +204,7 @@ io.sockets.on('connection', (socket) => {
   }, INTERVAL * 2);
 
   setInterval(() => {
-    child = exec(`uptime | tail -n 1 | awk '{print $3 $4 $5}'`, (error, stdout, stderr) => {
+    firstChild = exec(`uptime | tail -n 1 | awk '{print $3 $4 $5}'`, (error, stdout, stderr) => {
       if (error !== null) {
         console.log(`[ERROR]: ${error}`);
       } 
@@ -215,7 +215,7 @@ io.sockets.on('connection', (socket) => {
   }, 60000);
 
   setInterval(() => {
-    child = exec(`ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'`, (error, stdout, stderr) => {
+    firstChild = exec(`ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'`, (error, stdout, stderr) => {
       if (error !== null) {
         console.log(`[ERROR]: ${error}`);
       } 
