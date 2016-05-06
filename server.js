@@ -19,11 +19,11 @@ const io = require('socket.io')
   .listen(app);
 
 app.listen(PORT, function() {
-  console.log(`Monitoring running on port: ${PORT}`)
+  console.log(`Monitoring tool running on port: ${PORT}`)
 });
 
 function serverHandler(req, res) {
-	fs.readFile(__dirname+'/index.html', function(err, data) {
+	fs.readFile(__dirname + '/index.html', function(err, data) {
 		if (err) {
 			console.log(err);
 			res.writeHead(500);
