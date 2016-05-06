@@ -1,6 +1,3 @@
-const port = process.env.PORT || 3000;
-const app = require('http').createServer(handler).listen(port, "0.0.0.0");
-
 const io = require('socket.io').listen(app);
 const fs = require('fs');
 const sys = require('util');
@@ -10,161 +7,182 @@ let child;
 let child1;
 let connectCounter = 0;
 
-app.listen(port, function() {
-  console.log(`Monitoring running on port: ${port}`)
+const INTERVAL = process.env.INTERVAL = 500;
+const PORT = process.env.PORT || 3000;
+
+const app = require('http').createServer(handler).listen(PORT, '0.0.0.0');
+
+app.listen(PORT, function() {
+  console.log(`Monitoring running on port: ${PORT}`)
 });
 
 function handler(req, res) {
 	fs.readFile(__dirname+'/index.html', function(err, data) {
 		if (err) {
-      //Si hay error, mandaremos un mensaje de error 500
 			console.log(err);
 			res.writeHead(500);
 			return res.end('Error loading index.html');
 		}
+
 		res.writeHead(200);
 		res.end(data);
 	});
 }
 
-//Cuando abramos el navegador estableceremos una conexión con socket.io.
-//Cada X segundos mandaremos a la gráfica un nuevo valor. 
-io.sockets.on('connection', function(socket) {
-  var memTotal, memUsed = 0, memFree = 0, memBuffered = 0, memCached = 0, sendData = 1, percentBuffered, percentCached, percentUsed, percentFree;
-  var address = socket.handshake.address;
+io.sockets.on('connection', (socket) => {
+  let memTotal; 
+  let memUsed = 0; 
+  let memFree = 0;
+  let memBuffered = 0;
+  let memCached = 0;
+  let sendData = 1;
+  let percentBuffered;
+  let percentCached; 
+  let percentUsed; 
+  let percentFree;
+  
+  let address = socket.handshake.address;
 
-  console.log("New connection from " + address.address + ":" + address.port);
-  connectCounter++; 
-  console.log("NUMBER OF CONNECTIONS++: "+connectCounter);
-  socket.on('disconnect', function() { connectCounter--;  console.log("NUMBER OF CONNECTIONS--: "+connectCounter);});
+  console.log(`New connection from ${address.address}:${address.port}`);
+  console.log(`+++ Connection numbers: ${connectCounter++}`);
 
-  // Function for checking memory
-    child = exec("egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o", function (error, stdout, stderr) {
+  socket.on('disconnect', () => console.log(`--- Connection numbers: ${connectCounter--}`));
+
+  child = exec(`egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
     if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
+      console.log(`[ERROR]: ${error}`);
+    } 
+    else {
       memTotal = stdout;
       socket.emit('memoryTotal', stdout); 
     }
   });
 
-    child = exec("hostname", function (error, stdout, stderr) {
+  child = exec('hostname', (error, stdout, stderr) => {
     if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
+      console.log(`[ERROR]: ${error}`);
+    } 
+    else {
       socket.emit('hostname', stdout); 
     }
   });
 
-    child = exec("uptime | tail -n 1 | awk '{print $1}'", function (error, stdout, stderr) {
+  child = exec(`uptime | tail -n 1 | awk '{print $1}'`, (error, stdout, stderr) => {
     if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
+      console.log(`[ERROR]: ${error}`);
+    } 
+    else {
       socket.emit('uptime', stdout); 
     }
   });
 
-    child = exec("uname -r", function (error, stdout, stderr) {
+  child = exec(`uname -r`, (error, stdout, stderr) => {
     if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
+      console.log(`[ERROR]: ${error}`);
+    } 
+    else {
       socket.emit('kernel', stdout); 
     }
   });
 
-    child = exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function (error, stdout, stderr) {
-	    if (error !== null) {
-	      console.log('exec error: ' + error);
-	    } else {
-	      socket.emit('toplist', stdout); 
-	    }
-	  });
-    
-
-  setInterval(function(){
-    // Function for checking memory free and used
-    child1 = exec("egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o", function (error, stdout, stderr) {
-    if (error == null) {
-      memFree = stdout;
-      memUsed = parseInt(memTotal)-parseInt(memFree);
-      percentUsed = Math.round(parseInt(memUsed)*100/parseInt(memTotal));
-      percentFree = 100 - percentUsed;
-    } else {
-      sendData = 0;
-      console.log('exec error: ' + error);
+  child = exec(`top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'`, (error, stdout, stderr) => {
+    if (error !== null) {
+      console.log(`[ERROR]: ${error}`);
+    } 
+    else {
+      socket.emit('toplist', stdout); 
     }
   });
 
-    // Function for checking memory buffered
-    child1 = exec("egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o", function (error, stdout, stderr) {
-    if (error == null) {
-      memBuffered = stdout;
-      percentBuffered = Math.round(parseInt(memBuffered)*100/parseInt(memTotal));
-    } else {
-      sendData = 0;
-      console.log('exec error: ' + error);
-    }
-  });
+  setInterval(() => {
+    child1 = exec(`egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+      if (error !== null) {
+        sendData = 0;
+        console.log(`[ERROR]: ${error}`);
+      } 
+      else {
+        memFree = stdout;
+        memUsed = parseInt(memTotal) - parseInt(memFree);
+        percentUsed = Math.round(parseInt(memUsed) * 100 / parseInt(memTotal));
+        percentFree = 100 - percentUsed;
+      }
+    });
 
-    // Function for checking memory buffered
-    child1 = exec("egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o", function (error, stdout, stderr) {
-    if (error == null) {
-      memCached = stdout;
-      percentCached = Math.round(parseInt(memCached)*100/parseInt(memTotal));
-    } else {
-      sendData = 0;
-      console.log('exec error: ' + error);
-    }
-  });
+    child1 = exec(`egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+      if (error !== null) {
 
-    if (sendData == 1) {
+      } 
+      else {
+        memBuffered = stdout;
+        percentBuffered = Math.round(parseInt(memBuffered) * 100/ parseInt(memTotal));
+      }
+    });
+
+    child1 = exec(`egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o`, (error, stdout, stderr) => {
+      if (error !== null) {
+        sendData = 0;
+        console.log(`[ERROR]: ${error}`);
+      }
+      else {
+        memCached = stdout;
+        percentCached = Math.round(parseInt(memCached)*100/parseInt(memTotal));
+      }
+    });
+
+    if (sendData === 1) {
       socket.emit('memoryUpdate', percentFree, percentUsed, percentBuffered, percentCached); 
-    } else {
+    } 
+    else {
       sendData = 1;
     }
-  }, 5000);
+  }, INTERVAL);
 
-  // Function for measuring temperature
-  setInterval(function(){
-    child = exec("cat /sys/class/thermal/thermal_zone0/temp", function (error, stdout, stderr) {
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
-      //Es necesario mandar el tiempo (eje X) y un valor de temperatura (eje Y).
-      var date = new Date().getTime();
-      var temp = parseFloat(stdout)/1000;
-      socket.emit('temperatureUpdate', date, temp); 
-    }
-  });}, 5000);
+  setInterval(() => {
+    child = exec(`cat /sys/class/thermal/thermal_zone0/temp`, (error, stdout, stderr) => {
+      if (error !== null) {
+        console.log(`[ERROR]: ${error}`);
+      } 
+      else {
+        let date = new Date().getTime();
+        let temp = parseFloat(stdout) / 1000;
 
-  setInterval(function(){
-    child = exec("top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'", function (error, stdout, stderr) {
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    } else {
-      //Es necesario mandar el tiempo (eje X) y un valor de temperatura (eje Y).
-      var date = new Date().getTime();
-      socket.emit('cpuUsageUpdate', date, parseFloat(stdout)); 
-    }
-  });}, 10000);
+        socket.emit('temperatureUpdate', date, temp); 
+      }
+    });
+  }, INTERVAL);
 
-	// Uptime
-  setInterval(function(){
-    child = exec("uptime | tail -n 1 | awk '{print $3 $4 $5}'", function (error, stdout, stderr) {
-	    if (error !== null) {
-	      console.log('exec error: ' + error);
-	    } else {
-	      socket.emit('uptime', stdout); 
-	    }
-	  });}, 60000);
+  setInterval(() => {
+    child = exec(`top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'`, (error, stdout, stderr) => {
+      if (error !== null) {
+        console.log(`[ERROR]: ${error}`);
+      } 
+      else {
+        let date = new Date().getTime();
+        socket.emit('cpuUsageUpdate', date, parseFloat(stdout)); 
+      }
+    });
+  }, INTERVAL * 2);
 
-// TOP list
-  setInterval(function(){
-    child = exec("ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'", function (error, stdout, stderr) {
-	    if (error !== null) {
-	      console.log('exec error: ' + error);
-	    } else {
-	      socket.emit('toplist', stdout); 
-	    }
-	  });}, 10000);
+  setInterval(() => {
+    child = exec(`uptime | tail -n 1 | awk '{print $3 $4 $5}'`, (error, stdout, stderr) => {
+      if (error !== null) {
+        console.log(`[ERROR]: ${error}`);
+      } 
+      else {
+        socket.emit('uptime', stdout); 
+      }
+    });
+  }, 60000);
+
+  setInterval(() => {
+    child = exec(`ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'`, (error, stdout, stderr) => {
+      if (error !== null) {
+        console.log(`[ERROR]: ${error}`);
+      } 
+      else {
+        socket.emit('toplist', stdout); 
+      }
+    });
+  }, 10000);
+
 });
