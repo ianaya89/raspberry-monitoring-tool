@@ -1,14 +1,28 @@
 {
   "name": "raspberry-monitoring-tool",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Real time web monitoring tool to check Raspberry Pi resources.",
   "main": "server.js",
-  "repository": "https://github.com/ianaya89/raspberry-monitoring-tool.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianaya89/raspberry-monitoring-tool.git"
+  },
   "author": "Ignacio Anaya <ignacio.anaya89@gmail.com>",
   "scripts": {
     "start": "node server"
-    },
-    "dependencies": {
-     "socket.io": "~0.9.14"
-   }
- }
+  },
+  "dependencies": {
+    "socket.io": "~0.9.14"
+  },
+  "bugs": {
+    "url": "https://github.com/ianaya89/raspberry-monitoring-tool/issues"
+  },
+  "homepage": "https://github.com/ianaya89/raspberry-monitoring-tool#readme",
+  "keywords": [
+    "raspberry",
+    "pi",
+    "tool",
+    "monitoring"
+  ],
+  "license": "MIT"
+}
