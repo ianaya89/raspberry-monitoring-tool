@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "description": "Real time web monitoring tool to check Raspberry Pi resources.",
   "main": "server.js",
-  "repository": "https://github.com/GeekyTheory/Raspberry-Pi-Status",
-  "author": "Mario Pérez Esteso <mario@geekytheory.com>",
-  "dependencies": {
-   "socket.io": "~0.9.14"
-  }
-}
+  "repository": "https://github.com/ianaya89/raspberry-monitoring-tool.git",
+  "author": "Ignacio Anaya <ignacio.anaya89@gmail.com>",
+  "scripts": {
+    "start": "node server"
+    },
+    "dependencies": {
+     "socket.io": "~0.9.14"
+   }
+ }
