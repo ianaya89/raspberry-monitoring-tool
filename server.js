@@ -1,15 +1,19 @@
 const port = process.env.PORT || 3000;
+const app = require('http').createServer(handler).listen(port, "0.0.0.0");
 
-var app = require('http').createServer(handler).listen(port, "0.0.0.0"),
-  io = require('socket.io').listen(app),
-  fs = require('fs'),
-  sys = require('util'),
-  exec = require('child_process').exec,
-  child, child1;
-  var connectCounter = 0;
-//Escuchamos en el puerto $port
-app.listen(port);
-//Si todo va bien al abrir el navegador, cargaremos el archivo index.html
+const io = require('socket.io').listen(app);
+const fs = require('fs');
+const sys = require('util');
+const exec = require('child_process').exec;
+
+let child;
+let child1;
+let connectCounter = 0;
+
+app.listen(port, function() {
+  console.log(`Monitoring running on port: ${port}`)
+});
+
 function handler(req, res) {
 	fs.readFile(__dirname+'/index.html', function(err, data) {
 		if (err) {
