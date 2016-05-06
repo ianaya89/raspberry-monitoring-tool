@@ -1,6 +1,7 @@
-'use-strict';
+'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const sys = require('util');
 const exec = require('child_process').exec;
 
@@ -23,14 +24,42 @@ app.listen(PORT, function() {
 });
 
 function serverHandler(req, res) {
-	fs.readFile(__dirname + '/index.html', function(err, data) {
+     var filePath = '.' + req.url;
+    if (filePath == './')
+        filePath = './index.html';
+
+    var extname = path.extname(filePath);
+    var contentType = 'text/html';
+    switch (extname) {
+        case '.js':
+            contentType = 'text/javascript';
+            break;
+        case '.css':
+            contentType = 'text/css';
+            break;
+        case '.json':
+            contentType = 'application/json';
+            break;
+        case '.png':
+            contentType = 'image/png';
+            break;      
+        case '.jpg':
+            contentType = 'image/jpg';
+            break;
+        case '.wav':
+            contentType = 'audio/wav';
+            break;
+    }
+
+
+	fs.readFile(__dirname + '/public/' + filePath, function(err, data) {
 		if (err) {
 			console.log(err);
 			res.writeHead(500);
 			return res.end('Error loading index.html');
 		}
 
-		res.writeHead(200);
+		res.writeHead(200,  { 'Content-Type': contentType });
 		res.end(data);
 	});
 }
