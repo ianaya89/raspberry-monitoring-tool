@@ -1,3 +1,5 @@
+'use-strict';
+
 const io = require('socket.io').listen(app);
 const fs = require('fs');
 const sys = require('util');
